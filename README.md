@@ -1,4 +1,4 @@
-#  u-blox M8 Product Category
+
 # u-blox M8 Product Categories
 
 The u-blox M8 series provides GNSS solutions with various capabilities suited for different applications. Below is an explanation of the key product categories mentioned in the u-blox M8 product description document.
