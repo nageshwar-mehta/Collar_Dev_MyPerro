@@ -177,5 +177,3 @@ void loop() {
 }
 ```
 
-Would you like further details on **mesh-based GPS tracking**? 🚀
-
