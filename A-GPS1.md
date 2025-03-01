@@ -1,4 +1,4 @@
-# **A-GPS and NEO-M8N GPS Module for IoT Pet Collar: Detailed Guide**
+# **A-GPS and NEO-M8M GPS Module for IoT Pet Collar: Detailed Guide**
 
 ## **1. Introduction to A-GPS and Project Overview**
 
@@ -27,18 +27,27 @@ We are designing a **smart pet collar** that ensures pet safety by tracking its 
 
 ### **Hardware**
 
-- **NEO-M8N GPS Module** (for location tracking)
+- **NEO-M8M GPS Module** (for location tracking)
 - **ESP8266/ESP32** (for WiFi & Bluetooth connectivity)
 - **HC-05/HC-06 Bluetooth Module** (for seamless WiFi setup)
 - **Battery (LiPo 3.7V)** (for portability)
 - **Power Management Circuit** (to optimize battery usage)
 - **USB-to-UART Adapter** (for initial setup & debugging)
 
-### **Software**
+### **Software & Libraries**
 
-- **u-center** (for configuring NEO-M8N) - [Download](https://www.u-blox.com/en/product/u-center)
-- **Arduino IDE** (for programming ESP) - [Download](https://www.arduino.cc/en/software)
-- **AssistNow Service** (for fetching A-GPS data) - [AssistNow](https://www.u-blox.com/en/assistnow)
+- **Arduino IDE** - [Download](https://www.arduino.cc/en/software)
+- **u-center (for configuring NEO-M8M GPS module)** - [Download](https://www.u-blox.com/en/product/u-center)
+- **ESP8266WiFi library** - Included in Arduino IDE
+- **SoftwareSerial library** - Included in Arduino IDE
+- **HTTPClient library** - Install via Arduino Library Manager
+- **AssistNow Service API** - [AssistNow](https://www.u-blox.com/en/assistnow) (for A-GPS)
+
+**Guide to Install Required Libraries:**
+1. Open **Arduino IDE**.
+2. Go to **Sketch** > **Include Library** > **Manage Libraries**.
+3. Search for `ESP8266WiFi` and install it.
+4. Search for `HTTPClient` and install it.
 
 ---
 
@@ -72,26 +81,21 @@ void setup() {
     Serial.println("Waiting for SSID & Password...");
     
     int index = 0;
-    while (BTSerial.available() == 0);
+    while (BTSerial.available() == 0); // Wait for input
     while (BTSerial.available()) {
-        ssid[index] = BTSerial.read();
+        ssid[index] = BTSerial.read(); // Read SSID
         index++;
     }
     ssid[index] = '\0';
     
     delay(1000);
     index = 0;
-    while (BTSerial.available() == 0);
+    while (BTSerial.available() == 0); // Wait for input
     while (BTSerial.available()) {
-        password[index] = BTSerial.read();
+        password[index] = BTSerial.read(); // Read Password
         index++;
     }
     password[index] = '\0';
-    
-    Serial.print("Received SSID: ");
-    Serial.println(ssid);
-    Serial.print("Received Password: ");
-    Serial.println(password);
     
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
@@ -133,7 +137,7 @@ void fetchAGPSData() {
     
     if (httpCode == 200) {
         String agpsData = http.getString();
-        gpsSerial.write(agpsData.c_str(), agpsData.length());
+        gpsSerial.write(agpsData.c_str(), agpsData.length()); // Send A-GPS data to GPS module
     }
     http.end();
 }
@@ -165,21 +169,22 @@ void sendLocation(float lat, float lon) {
    ESP.deepSleep(600e6); // Sleep for 10 minutes
    ```
 2. **Low Power GPS Mode:**
-   - Configure NEO-M8N to operate in power-saving mode using u-center.
-
+   - Configure NEO-M8M to operate in power-saving mode using u-center.
 
 ---
 
-## **6. References**
+## **5. References & Example Codes**
 
 - **u-blox AssistNow Service:** [AssistNow](https://www.u-blox.com/en/assistnow)
 - **Arduino IDE:** [Download](https://www.arduino.cc/en/software)
-- **NEO-M8N Datasheet:** [Download](https://www.u-blox.com/sites/default/files/NEO-M8N-FW3_DataSheet_%28UBX-15031086%29.pdf)
+- **NEO-M8M Datasheet:** [Download](https://www.u-blox.com/sites/default/files/NEO-M8M_DataSheet.pdf)
+- **Similar GitHub Examples:**
+  - [ESP8266 GPS Tracker](https://github.com/schollz/esp8266-gps-tracker)
+  - [Bluetooth WiFi Setup](https://github.com/jeffreylanters/esp8266-ble-wifi-setup)
 
 ---
 
-## **7. Conclusion**
+## **6. Conclusion**
 
-This guide provides a complete setup for a **smart pet collar** using **A-GPS, Bluetooth-based WiFi setup, and geofencing** to efficiently track pets. The combination of **battery management, real-time updates, and low-power operation** ensures the best performance. 🚀
-
+This guide provides a complete setup for a **smart pet collar** using **A-GPS, Bluetooth-based WiFi setup, and geofencing** to efficiently track pets while maintaining affordability. 🚀
 
