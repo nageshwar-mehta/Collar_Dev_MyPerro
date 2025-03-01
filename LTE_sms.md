@@ -126,73 +126,36 @@ void sendSMS(float lat, float lon) {
 
 ---
 
-## **4. Alternative: Using SMS API Instead of LTE Module**
+## **7. Suggestions for Optimization**
 
-Instead of using the **A7672S LTE module**, we can use an online **SMS API** that allows us to send messages using **WiFi** (which reduces power consumption significantly).
+### **1. Use MQTT Instead of SMS for Real-Time Data (If Internet is Available)**
+Instead of SMS, using **MQTT (Message Queuing Telemetry Transport)** over WiFi or LTE can drastically reduce operational costs. MQTT uses minimal bandwidth and works well for low-power IoT devices.
+- **Pros:** Lower cost, real-time updates, works with cloud services.
+- **Cons:** Needs an internet connection.
+- **Implementation:** Use MQTT brokers like **Mosquitto** or cloud-based options like **AWS IoT, Adafruit IO, or HiveMQ**.
 
-### **Popular SMS API Services:**
+### **2. Optimize GPS Wake-Up & Data Transmission**
+- Instead of sending GPS data **every second**, send updates only when a significant movement is detected (>50 meters change).
+- Use **motion sensors (like MPU6050 or ADXL345)** to detect movement and activate GPS only when needed.
 
-| **API Provider** | **Cost per SMS** |
-|-----------------|-----------------|
-| Twilio         | ₹0.5 - ₹1.2       |
-| Fast2SMS       | ₹0.2 - ₹0.8       |
-| Textlocal      | ₹0.3 - ₹1.0       |
+### **3. Power Optimization Techniques**
+- **ESP8266 Deep Sleep Mode:** Save battery by sleeping when not in use.
+- **Lower GPS Update Rate:** Instead of **1-second updates**, use **30-second or movement-based updates**.
+- **Use External Battery with Efficient Charging Circuit:** A **3.7V LiPo battery with a TP4056 charging module** improves longevity.
 
-### **Code for Sending SMS Using Twilio API**
+### **4. Use a Cheaper LTE Alternative**
+The **A7672S LTE module** is robust but may be costly. Consider using **SIM800L (2G)** or **SIM7600 (4G, but cheaper than A7672S)**.
 
-```cpp
-#include <ESP8266HTTPClient.h>
+### **5. Reduce SMS Costs Using Bulk SMS APIs**
+Instead of direct LTE-based SMS, using **bulk SMS APIs** reduces cost:
+| **Provider** | **Cost per SMS** |
+|-------------|-----------------|
+| Fast2SMS   | ₹0.2 - ₹0.8      |
+| Twilio     | ₹0.5 - ₹1.2      |
+| Textlocal  | ₹0.3 - ₹1.0      |
 
-void sendAPISMS(float lat, float lon) {
-    HTTPClient http;
-    String url = "https://api.twilio.com/send?to=+91XXXXXXXXXX&msg=Pet Location: " + String(lat) + ", " + String(lon);
-    http.begin(url);
-    int httpCode = http.GET();
-    http.end();
-}
-```
+**Implementation:**
+Use **WiFi** when available and only use **LTE SMS when out of range**.
 
-### **Pros of API-Based SMS Over LTE Module:**
-✔️ **Lower Power Consumption**
-✔️ **No Extra LTE Module Required**
-✔️ **Easier Integration with Cloud Services**
-
-### **Cons:**
-❌ **Needs WiFi or Mobile Data Connection**
-❌ **API Costs Per Message**
-
----
-
-## **5. Power Optimization Strategies**
-
-- **Use Deep Sleep Mode on ESP8266:**
-  ```cpp
-  ESP.deepSleep(300e6); // Sleep for 5 minutes
-  ```
-- **Optimize LTE Usage:**
-  - Send SMS only once per minute to reduce battery drain.
-  - Power off LTE module when inside the geofence.
-
----
-
-## **6. Conclusion & Suggestions**
-
-### **Final Implementation Choice**
-1. **If power efficiency is the priority → Use SMS API with WiFi**
-2. **If independent tracking is needed → Use LTE Module A7672S**
-
-### **Additional Recommendations**
-- **Use a Rechargeable LiPo Battery with Solar Charging (If Feasible).**
-- **Consider a Lower Power Microcontroller like ESP32-S2 for Extended Battery Life.**
-- **Implement a Cloud-Based Dashboard for Live Tracking.**
-
----
-
-## **7. References & Further Reading**
-
-- **A7672S Datasheet:** [Download](https://www.quectel.com/product/lte-a7672s)
-- **NEO-M8M Datasheet:** [Download](https://www.u-blox.com/sites/default/files/NEO-M8M_DataSheet.pdf)
-- **Twilio SMS API Docs:** [Twilio API](https://www.twilio.com/docs/sms/api)
-
-🚀 **This guide provides an affordable and efficient solution for real-time pet tracking using LTE or SMS API!**
+🚀 **Final Recommendation:** Use a hybrid approach: **WiFi + MQTT when available, LTE + SMS as fallback** to keep costs low while maintaining reliability.
 
