@@ -1,101 +1,126 @@
 #include <WiFi.h>
+#include <FirebaseESP32.h>
+#include <ArduinoJson.h>
 
-String ssid = "nagesh____";
-String password = "rahul12345";
-// Create WiFiServer object
+// WiFi Credentials
+#define WIFI_SSID "nagesh____"
+#define WIFI_PASSWORD "rahul12345"
+
+// Firebase Credentials
+#define FIREBASE_HOST "https://myperrodemo-default-rtdb.firebaseio.com/"
+#define FIREBASE_AUTH "YOUR_DATABASE_SECRET"
+
+FirebaseData firebaseData;
 WiFiServer server(8080);
+String sessionID; // Unique session variable
 
-// Function to connect to the WiFi network
-void connect_to_wifi(const char* ssid, const char* password)
+// Function to connect to WiFi
+void connect_to_wifi()
 {
-    // Begin WiFi connection with provided SSID and password
-    WiFi.begin(ssid, password);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     Serial.print("Connecting to WiFi");
 
-    // Wait for the connection to establish
     while (WiFi.status() != WL_CONNECTED)
     {
-        delay(200);
-        Serial.print("...");
+        delay(500);
+        Serial.print(".");
     }
 
-    // WiFi connected, print the IP address
-    Serial.println();
-    Serial.println("WiFi connected");
-    Serial.print("IP address: ");
+    Serial.println("\nWiFi Connected!");
+    Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
-
-    // Start the server on port 8080
-    server.begin();
 }
+
+// Function to generate a unique session ID
+void generateSessionID()
+{
+    sessionID = "session_" + String(random(1000, 9999)); // Unique session ID
+    Serial.print("Generated Session ID: ");
+    Serial.println(sessionID);
+}
+
+// Function to send data to Firebase
+void sendDataToFirebase(String key, String value)
+{
+    String path = "/" + sessionID + "/" + key; // Store under sessionID
+    if (Firebase.setString(firebaseData, path, value))
+    {
+        Serial.println("Data Sent to Firebase Successfully!");
+    }
+    else
+    {
+        Serial.print("Firebase Error: ");
+        Serial.println(firebaseData.errorReason());
+    }
+}
+
+// Function to receive data from client
 String receive_from_client(WiFiClient &client)
 {
-    // Check if the client has sent any data
     if (client.available())
     {
-        // Read the client's request
-        String request = client.readStringUntil('\n');
-        request.trim(); // Remove any leading/trailing whitespace
-        client.flush(); // Clear the input buffer
+        String request = client.readStringUntil('\n'); // Read input
+        request.trim(); // Remove extra spaces
+        client.flush(); // Clear input buffer
 
-        // Convert the request to uppercase
-        request.toUpperCase();
+        // Check if request contains only numbers (float/int)
+        bool isNumeric = true;
+        for (char c : request)
+        {
+            if (!isdigit(c) && c != '.')
+            {
+                isNumeric = false;
+                break;
+            }
+        }
 
-        // Send back the uppercase request as confirmation
-        client.print("sent: ");
-        client.println(request);
-
-        // If the request is "CLOSE", disconnect the client
-        // if (request == "CLOSE")
-        // { // Case insensitive check after conversion
-        //     client.stop();
-        //     Serial.println("Client disconnected");
-        //     return "client disconnected";
-        // }
-        
-
-        // Return the uppercase request
-        return request;
+        if (isNumeric)
+        {
+            sendDataToFirebase("sensor_value", request); // Send valid data
+            return request;
+        }
+        else
+        {
+            Serial.println("Invalid Input: Not a Number");
+            return "";
+        }
     }
-    // Return an empty string if no data is available
     return "";
 }
-int i=0;
-void setup() {
-  // Initialize serial communication
-  Serial.begin(115200);
-  connect_to_wifi(ssid.c_str(), password.c_str());
-  Serial.println("ESP Started");
-  delay(100);
 
 
-}
-void print1_to_10num(int d){
-  for(int i=0;i<10;i++){
-    Serial.println(i);
-    delay(d);
-  }
+void setup()
+{
+    Serial.begin(115200);
+    connect_to_wifi(); // Connect ESP to WiFi
+    Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+    Firebase.reconnectWiFi(true);
+
+    generateSessionID(); // Generate a new session ID on reboot
+
+    server.begin(); // Start server
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  if (WiFi.status() != WL_CONNECTED){
-    connect_to_wifi(ssid.c_str(), password.c_str());
-  }
-  WiFiClient client = server.available();
-  if(client){
-    Serial.println("Client Connected");
-    while(client.connected()){
-      String input = receive_from_client(client);
-      if(!input.isEmpty()){
-        Serial.println(input);
-      }
-      //Your main code 
-      print1_to_10num(1000);
+
+void loop()
+{
+    WiFiClient client = server.available();
+    if (client)
+    {
+        Serial.println("Client Connected!");
+        while (client.connected())
+        {
+            String input = receive_from_client(client);
+            if (!input.isEmpty())
+            {
+                Serial.print("Received and Sent to Firebase: ");
+                Serial.println(input);
+            }
+
+            
+            // Your main code 
+
+
+        }
     }
-  }
-  
-
-  
-
 }
